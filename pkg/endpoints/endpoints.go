@@ -54,20 +54,8 @@ func endpointsToCacheItem(ep *core.Endpoints) *CacheItem {
 	for _, s := range ep.Subsets {
 		// Each subset is a single slice.
 		sl := endpointsSubsetToSlice(&s)
-		// XXX/bowei -- metadata
-
 		fmt.Println(s)
 		fmt.Println(sl)
-		/*
-			for _, addr := range s.Addresses {
-				e := discovery.Endpoint{}
-				eps.Endpoints = append(eps.Endpoints, e)
-			}
-			for _, addr := range s.NotReadyAddresses {
-
-			}*/
-		//s.Ports
-
 	}
 
 	return ret

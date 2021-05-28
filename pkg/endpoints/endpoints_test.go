@@ -35,11 +35,7 @@ func Test_endpointsSubsetToSlice(t *testing.T) {
 			args: args{
 				s: &core.EndpointSubset{
 					Ports: []core.EndpointPort{
-						{
-							Name:     "web",
-							Port:     8080,
-							Protocol: core.ProtocolTCP,
-						},
+						{Name: "web", Port: 8080, Protocol: core.ProtocolTCP},
 					},
 				},
 			},
@@ -57,9 +53,7 @@ func Test_endpointsSubsetToSlice(t *testing.T) {
 			name: "1-ready",
 			args: args{
 				s: &core.EndpointSubset{
-					Addresses: []core.EndpointAddress{
-						{IP: "1.2.3.4"},
-					},
+					Addresses: []core.EndpointAddress{{IP: "1.2.3.4"}},
 					Ports: []core.EndpointPort{
 						{
 							Name:     "web",
@@ -91,15 +85,9 @@ func Test_endpointsSubsetToSlice(t *testing.T) {
 			name: "1-not-ready",
 			args: args{
 				s: &core.EndpointSubset{
-					NotReadyAddresses: []core.EndpointAddress{
-						{IP: "1.2.3.4"},
-					},
+					NotReadyAddresses: []core.EndpointAddress{{IP: "1.2.3.4"}},
 					Ports: []core.EndpointPort{
-						{
-							Name:     "web",
-							Port:     8080,
-							Protocol: core.ProtocolTCP,
-						},
+						{Name: "web", Port: 8080, Protocol: core.ProtocolTCP},
 					},
 				},
 			},
@@ -110,6 +98,37 @@ func Test_endpointsSubsetToSlice(t *testing.T) {
 						Conditions: discovery.EndpointConditions{
 							Ready: boolPtr(false),
 						},
+					},
+				},
+				Ports: []discovery.EndpointPort{
+					{
+						Name:     stringPtr("web"),
+						Port:     int32Ptr(8080),
+						Protocol: protocolPtr(core.ProtocolTCP),
+					},
+				},
+			},
+		},
+		{
+			name: "mixed-ready",
+			args: args{
+				s: &core.EndpointSubset{
+					Addresses:         []core.EndpointAddress{{IP: "1.2.3.4"}},
+					NotReadyAddresses: []core.EndpointAddress{{IP: "2.2.3.4"}},
+					Ports: []core.EndpointPort{
+						{Name: "web", Port: 8080, Protocol: core.ProtocolTCP},
+					},
+				},
+			},
+			want: &discovery.EndpointSlice{
+				Endpoints: []discovery.Endpoint{
+					{
+						Addresses:  []string{"1.2.3.4"},
+						Conditions: discovery.EndpointConditions{Ready: boolPtr(true)},
+					},
+					{
+						Addresses:  []string{"2.2.3.4"},
+						Conditions: discovery.EndpointConditions{Ready: boolPtr(false)},
 					},
 				},
 				Ports: []discovery.EndpointPort{
