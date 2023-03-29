@@ -44,6 +44,7 @@ import (
 	"k8s.io/ingress-gce/pkg/composite"
 	"k8s.io/ingress-gce/pkg/neg/metrics"
 	"k8s.io/ingress-gce/pkg/neg/readiness"
+	"k8s.io/ingress-gce/pkg/neg/syncers/labels"
 	negtypes "k8s.io/ingress-gce/pkg/neg/types"
 	svcnegclient "k8s.io/ingress-gce/pkg/svcneg/client/clientset/versioned"
 	"k8s.io/ingress-gce/pkg/utils/patch"
@@ -109,8 +110,8 @@ type transactionSyncer struct {
 	// enableDegradedMode indicates whether we do endpoint calculation using degraded mode procedures
 	enableDegradedMode bool
 
-	// podLabelPropagationConfig configures the pod label to be propagated to NEG endpoints
-	podLabelPropagationConfig negtypes.PodLabelPropagationConfig
+	// podLabels configures the pod label to be propagated to NEG endpoints
+	podLabels *labels.PodLabelPropagationConfig
 }
 
 func NewTransactionSyncer(
@@ -130,33 +131,33 @@ func NewTransactionSyncer(
 	syncerMetrics *metrics.SyncerMetrics,
 	customName bool,
 	log klog.Logger,
-	lpConfig negtypes.PodLabelPropagationConfig) negtypes.NegSyncer {
+	podLabels *labels.PodLabelPropagationConfig) negtypes.NegSyncer {
 
 	logger := log.WithName("Syncer").WithValues("service", klog.KRef(negSyncerKey.Namespace, negSyncerKey.Name), "negName", negSyncerKey.NegName)
 
 	// TransactionSyncer implements the syncer core
 	ts := &transactionSyncer{
-		NegSyncerKey:              negSyncerKey,
-		needInit:                  true,
-		transactions:              NewTransactionTable(),
-		nodeLister:                nodeLister,
-		podLister:                 podLister,
-		serviceLister:             serviceLister,
-		endpointSliceLister:       endpointSliceLister,
-		svcNegLister:              svcNegLister,
-		recorder:                  recorder,
-		cloud:                     cloud,
-		zoneGetter:                zoneGetter,
-		endpointsCalculator:       epc,
-		reflector:                 reflector,
-		kubeSystemUID:             kubeSystemUID,
-		svcNegClient:              svcNegClient,
-		syncCollector:             syncerMetrics,
-		customName:                customName,
-		errorState:                "",
-		logger:                    logger,
-		enableDegradedMode:        flags.F.EnableDegradedMode,
-		podLabelPropagationConfig: lpConfig,
+		NegSyncerKey:        negSyncerKey,
+		needInit:            true,
+		transactions:        NewTransactionTable(),
+		nodeLister:          nodeLister,
+		podLister:           podLister,
+		serviceLister:       serviceLister,
+		endpointSliceLister: endpointSliceLister,
+		svcNegLister:        svcNegLister,
+		recorder:            recorder,
+		cloud:               cloud,
+		zoneGetter:          zoneGetter,
+		endpointsCalculator: epc,
+		reflector:           reflector,
+		kubeSystemUID:       kubeSystemUID,
+		svcNegClient:        svcNegClient,
+		syncCollector:       syncerMetrics,
+		customName:          customName,
+		errorState:          "",
+		logger:              logger,
+		enableDegradedMode:  flags.F.EnableDegradedMode,
+		podLabels:           podLabels,
 	}
 	// Syncer implements life cycle logic
 	syncer := newSyncer(negSyncerKey, serviceLister, recorder, ts, logger)
