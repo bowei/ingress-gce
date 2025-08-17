@@ -20,9 +20,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	cache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/ingress-gce/pkg/context"
 	"k8s.io/ingress-gce/pkg/negbinding/clientset/versioned"
-	informers "k8s.io/ingress-gce/pkg/negbinding/informers/externalversions"
 	"k8s.io/klog/v2"
 )
 
@@ -36,31 +34,36 @@ type Controller struct {
 	// Add other fields as needed
 }
 
+type informers interface {
+	k8s() kubernetes.Interface
+	negBinding() cache.SharedIndexInformer
+	negBindingClient() versioned.Interface
+	service() cache.SharedIndexInformer
+	newRecorder(ns string) record.EventRecorder
+}
+
+type clients interface {
+	KubeClient() kubernetes.Interface
+}
+
 // NewController creates a new NetworkEndpointGroupBinding controller.
 func NewController(
-	ctx *context.ControllerContext,
-	client versioned.Interface,
+	informers informers,
 ) *Controller {
-	negbindingInformerFactory := informers.NewSharedInformerFactory(client, 0)
-	negbindingInformer := negbindingInformerFactory.K8s().V1().NetworkEndpointGroupBindings().Informer()
-	serviceInformer := ctx.ServiceInformer
-
 	c := &Controller{
-		client: ctx.KubeClient,
-		// TODO
-		// negbindingClient:   ctx.NegbindingClient,
-		negbindingInformer: negbindingInformer,
-		serviceInformer:    serviceInformer,
-		recorder:           ctx.Recorder(ctx.Namespace),
+		client:             informers.k8s(),
+		negbindingClient:   informers.negBindingClient(),
+		negbindingInformer: informers.negBinding(),
+		serviceInformer:    informers.service(),
+		recorder:           informers.newRecorder("NetworkEndpointGroupBinding"),
 	}
 
-	negbindingInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.negbindingInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleNetworkEndpointGroupBindingAdd,
 		UpdateFunc: c.handleNetworkEndpointGroupBindingUpdate,
 		DeleteFunc: c.handleNetworkEndpointGroupBindingDelete,
 	})
-
-	serviceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.serviceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.handleServiceAdd,
 		UpdateFunc: c.handleServiceUpdate,
 		DeleteFunc: c.handleServiceDelete,
