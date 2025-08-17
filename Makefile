@@ -67,6 +67,8 @@ push-e2e:
 # update generated code
 generate:
 	hack/update-codegen.sh
+	hack/update-codegen2.sh
+	
 # run linters, ensure generated code, etc.
 verify:
 	hack/verify-all.sh
