@@ -24,26 +24,21 @@ Schema:
 *   The `status` should include conditions to report errors, such as the
     referenced `Service` or NEGs not existing.
 *   Generate the CRD manifest file using `controller-gen`.
-*   **Source:** This will likely be invoked via the `make generate` command, as
-    configured in the project's `Makefile`.
+*   **Source:** This will be invoked via the `hack/update-codegen2.sh` command.
 
-
-
-
-2.  **Scaffold the New Controller:**
+*  **Scaffold the New Controller:**
     *   Create a new controller within the existing NEG controller framework to
         manage `NetworkEndpointGroupBinding` resources.
         *   **Source:** Create a new file, e.g.,
-            `pkg/neg_binding/controller.go`.
+            `pkg/negbinding/controller.go`.
     *   Set up the necessary watchers for `NetworkEndpointGroupBinding`
         * Watch the NetworkEndpointGroupBinding resource.
         * Watch the Service resource.
     *   Initialize the required clients and informers.
-
-
-Testing the scaffold:
-* 
-
+*  **Testing the New Controller:**
+    * Code build compile.
+    * Create unit tests with Fake clients.
+      * Add a simple test case that creates the resource, updates it, and deletes it.
 
 ## Phase 2: Core Controller Logic
 
@@ -55,7 +50,7 @@ This phase involves implementing the main reconciliation logic for the `NetworkE
     *   The controller's main reconciliation loop will be triggered by changes
         to `NetworkEndpointGroupBinding` resources.
         *   **Source:** A new `sync` or `reconcile` function in
-            `pkg/neg_binding/controller.go`.
+            `pkg/negbinding/controller.go`.
     *   When a `NetworkEndpointGroupBinding` is created or updated, the controller will:
         *   Fetch the referenced `Service` to get its selector.
         *   Add a NEG syncer to begin sync'ing the endpoints associated with the binding.
@@ -107,4 +102,4 @@ The final phase involves integrating the new controller with the existing infras
         *   **Source:** A new file, `pkg/neg/binding_controller_test.go`.
     *   **Integration Tests:** Develop integration tests that run against a real Kubernetes cluster and GCP environment to verify the end-to-end functionality.
     *   **E2E Tests:** Add end-to-end tests to cover the user-facing scenarios, including creating and deleting `NetworkEndpointGroupBinding` resources and verifying that the NEGs are correctly populated.
-        *   **Source:** A new test file, e.g., `cmd/e2e-test/neg_binding_test.go`, following the pattern of `cmd/e2e-test/neg_test.go`.
+        *   **Source:** A new test file, e.g., `cmd/e2e-test/negbinding_test.go`, following the pattern of `cmd/e2e-test/neg_test.go`.
